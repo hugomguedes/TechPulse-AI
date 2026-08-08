@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: techpulse-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-techpulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-techpulse}
+      POSTGRES_DB: ${POSTGRES_DB:-techpulse}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: techpulse-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      TECHCRUNCH_RSS_URL: ${TECHCRUNCH_RSS_URL:-https://techcrunch.com/feed/}
+      GITHUB_BLOG_RSS_URL: ${GITHUB_BLOG_RSS_URL:-https://github.blog/feed/}
+      HACKERNEWS_LIMIT: ${HACKERNEWS_LIMIT:-20}
+      DEVTO_PER_PAGE: ${DEVTO_PER_PAGE:-20}
+      POSTGRES_USER: ${POSTGRES_USER:-techpulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-techpulse}
+      POSTGRES_DB: ${POSTGRES_DB:-techpulse}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+    command: ["sh", "-c", "python -m techpulse_ai.main && exec sleep infinity"]
+    healthcheck:
+      test: ["CMD", "true"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

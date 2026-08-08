@@ -4,8 +4,10 @@ Monta as fontes de notícias configuradas, executa a coleta através do
 `NewsCollectorService` e imprime os resultados no terminal, apenas para
 validação manual. Não há persistência nem interface gráfica nesta etapa.
 """
+
 import os
 
+import psycopg
 from dotenv import load_dotenv
 
 from techpulse_ai.collectors.devto_collector import DevToCollector
@@ -87,11 +89,35 @@ def print_articles(articles: list[Article]) -> None:
 
 
 def main() -> None:
-    """Executa a coleta completa e imprime os resultados no terminal."""
+    """Executa a coleta completa e armazena os resultados em banco."""
     load_dotenv()
     service = build_service()
     articles = service.collect_all()
-    print_articles(articles)
+    with psycopg.connect(
+        dbname=os.getenv("POSTGRES_DB"),
+        user=os.getenv("POSTGRES_USER"),
+        password=os.getenv("POSTGRES_PASSWORD"),
+        host=os.getenv("POSTGRES_HOST", "postgres"),
+        port=os.getenv("POSTGRES_PORT", "5432"),
+    ) as conn, conn.cursor() as cur:
+        cur.execute("""
+                CREATE TABLE IF NOT EXISTS articles (
+                    id serial primary key,
+                    titulo text,
+                    fonte text,
+                    data_publicacao date,
+                    url text
+                )
+                """)
+        for article in articles:
+            publicado_em = article.published_at.date() if article.published_at else None
+            cur.execute(
+                """
+                    INSERT INTO articles (titulo, fonte, data_publicacao, url)
+                    VALUES (%s, %s, %s, %s)
+                """,
+                (article.title, article.source, publicado_em, article.url)
+            )
 
 
 if __name__ == "__main__":
