@@ -68,7 +68,7 @@ techpulse-ai/
 
 ## Tecnologias
 
-- Python 3.12+
+- Python 3.13+
 - Pydantic — validação e tipagem do modelo `Article`
 - feedparser — leitura de feeds RSS/Atom
 - requests — chamadas HTTP às APIs (Hacker News, Dev.to)

@@ -1,8 +1,8 @@
 """Ponto de entrada da aplicação TechPulse AI (fase 1 - coleta).
 
 Monta as fontes de notícias configuradas, executa a coleta através do
-`NewsCollectorService` e imprime os resultados no terminal, apenas para
-validação manual. Não há persistência nem interface gráfica nesta etapa.
+`NewsCollectorService`, imprime os resultados no terminal (para validação
+manual) e os persiste em PostgreSQL. Não há interface gráfica nesta etapa.
 """
 
 import os
@@ -89,10 +89,11 @@ def print_articles(articles: list[Article]) -> None:
 
 
 def main() -> None:
-    """Executa a coleta completa e armazena os resultados em banco."""
+    """Executa a coleta completa, exibe os resultados e os armazena em banco."""
     load_dotenv()
     service = build_service()
     articles = service.collect_all()
+    print_articles(articles)
     save_articles(articles)
 
 

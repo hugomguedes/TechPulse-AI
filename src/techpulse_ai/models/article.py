@@ -7,7 +7,7 @@ sistema nunca precise conhecer o formato original de cada fonte.
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Article(BaseModel):
@@ -17,6 +17,8 @@ class Article(BaseModel):
     (ou lista vazia, no caso de ``tags``) pelos normalizadores — nunca
     omitidos.
     """
+
+    model_config = ConfigDict(frozen=False, str_strip_whitespace=True)
 
     id: str | None = Field(
         default=None,
@@ -40,7 +42,3 @@ class Article(BaseModel):
     tags: list[str | None] = Field(
         default_factory=list, description="Lista de tags/categorias associadas à notícia."
     )
-
-    class ConfigDict:
-        frozen = False
-        str_strip_whitespace = True
